@@ -1,0 +1,15 @@
+[package]
+name = "smg_client"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.81"
+bincode = "1.3.3"
+glam = "0.27.0"
+raylib = "3.7.0"
+serde = { version = "1.0.197", features = ["derive"] }
+uuid = { version = "1.8.0", features = ["serde", "v4"] }
+smg_lib = { git = "https://github.com/JustJakeee/smg_lib.git " }
