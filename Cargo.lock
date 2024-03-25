@@ -143,17 +143,6 @@ dependencies = [
  "glam",
  "raylib",
  "serde",
- "smg_lib",
- "uuid",
-]
-
-[[package]]
-name = "smg_lib"
-version = "0.1.0"
-source = "git+https://github.com/JustJakeee/smg_lib.git#9e050433ea209d5f2077a2ca5181a696c737965d"
-dependencies = [
- "glam",
- "serde",
  "uuid",
 ]
 

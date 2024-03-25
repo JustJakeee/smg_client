@@ -7,7 +7,33 @@ use glam::Vec2;
 use serde::{Serialize, Deserialize};
 use bincode;
 use uuid::Uuid;
-use smg_lib::Packet;
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub enum Packet {
+    Connect(Uuid),
+    Disconnect(Uuid),
+    Message(String),
+    Player(PlayerState),
+    List(),
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+pub struct PlayerState {
+    pub uuid: Uuid,
+    pub x: f32,
+    pub y: f32,
+}
+
+impl PlayerState {
+    // new take Vec2
+    pub fn new(uuid: Uuid, pos: Vec2) -> Self {
+        Self {
+            uuid,
+            x: pos.x,
+            y: pos.y,
+        }
+    }
+}
 
 pub struct UdpGameClient {
     socket: UdpSocket,

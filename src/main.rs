@@ -4,8 +4,9 @@ mod udp_client;
 use glam::{IVec2, Vec2};
 use raylib::prelude::*;
 use udp_client::*;
-use smg_lib::*;
 use uuid::Uuid;
+use serde::{Serialize, Deserialize};
+use udp_client::*;
 
 struct State {
     width: i32,
