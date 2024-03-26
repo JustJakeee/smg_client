@@ -1,5 +1,6 @@
 #![allow(unused)]
 mod udp_client;
+mod scenes;
 
 use glam::{IVec2, Vec2};
 use raylib::prelude::*;
@@ -8,15 +9,24 @@ use uuid::Uuid;
 use serde::{Serialize, Deserialize};
 use udp_client::*;
 
-struct State {
+struct AppState {
     width: i32,
     height: i32,
     delta: f32,
     fps: u32,
+    scene: Scene,
+    client: Option<UdpGameClient>,
+}
+
+struct GameState {
     player: Player,
-    uuid_list: Vec<Uuid>,
     player_list: Vec<PlayerState>,
-    udp_client: Option<UdpGameClient>,
+    uuid_list: Vec<Uuid>,
+}
+
+enum Scene {
+    Game(GameState),
+    Menu,
 }
 
 pub struct Player {
@@ -53,31 +63,31 @@ fn main() {
         .msaa_4x()
         .build();
 
-    let mut state = State {
+    let mut app_state = AppState {
         width: START_SIZE.x,
         height: START_SIZE.y,
         delta: rl.get_frame_time(),
         fps: rl.get_fps(),
-        player: Player {
-            uuid: Uuid::new_v4(),
-            pos: Vec2::new(320., 240.),
-            color: Color::DARKBLUE,
-        },
-        uuid_list: Vec::new(),
-        player_list: Vec::new(),
-        udp_client: None,
+        scene: Scene::Menu,
+        client: None,
     };
 
-    let client =
-        UdpGameClient::connect("127.0.0.1:5000", state.player.uuid).expect("failed to connect");
-
-    println!("connected");
-
     while !rl.window_should_close() {
-        state.width = rl.get_screen_width();
-        state.height = rl.get_screen_height();
-        state.delta = rl.get_frame_time();
-        state.fps = rl.get_fps();
+        app_state.width = rl.get_screen_width();
+        app_state.height = rl.get_screen_height();
+        app_state.delta = rl.get_frame_time();
+        app_state.fps = rl.get_fps();
+
+        match app_state.scene {
+            Scene::Menu => {
+                menu::update(rl, &mut app_state);
+                menu::draw(rl, &mut app_state);
+            }
+            Scene::Game(ref mut game_state) => {
+                game::update(rl, &mut app_state, game_state);
+                game::draw(rl, &mut app_state, game_state);
+            }
+        }
 
         let mut move_dir = Vec2::ZERO;
         if rl.is_key_down(KeyboardKey::KEY_W) {
@@ -143,35 +153,20 @@ fn main() {
 
 fn draw_game(d: &mut RaylibDrawHandle, state: &State) {
     d.clear_background(Color::WHITE);
-    d.draw_text(&format!("fps: {}", state.fps), 0, 0, 20, Color::BLACK);
-    d.draw_text(
-        &format!("uuid: {:?}", state.player.uuid),
-        0,
-        20,
-        20,
-        Color::BLACK,
-    );
-    d.draw_text(
-        &format!("pos: ({}, {})", state.player.pos.x, state.player.pos.y),
-        0,
-        40,
-        20,
-        Color::BLACK,
-    );   
-    d.draw_text(
-        &format!("player list: {:?}", state.player_list),
-        0,
-        80,
-        20,
-        Color::BLACK,
-    );
-    state.player.draw(d);
-    for player in &state.player_list {
-        if player.uuid == state.player.uuid {
-            continue;
-        }
+        let list_str = state
+            .player_list
+            .iter()
+            .map(|x| format!("{}: ({}, {})", x.uuid, x.x, x.y))
+            .collect::<Vec<String>>()
+            .join("\n");
+        d.draw_text(&list_str, 0, 0, 20, Color::BLACK);
+        state.player.draw(&mut d);
+        for player in &state.player_list {
+            if player.uuid == state.player.uuid {
+                continue;
+            }
 
-        let player: Player = Player::from(player);
-        player.draw(d);
-    }
+            let player: Player = Player::from(player);
+            player.draw(&mut d);
+        }
 }
